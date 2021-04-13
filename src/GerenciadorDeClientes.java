@@ -25,39 +25,42 @@ public class GerenciadorDeClientes extends Thread {
 		try {
 			leitor = new BufferedReader(new InputStreamReader(cliente.getInputStream()));
 			escritor = new PrintWriter(cliente.getOutputStream(), true);
-			escritor.println("por favor escreva seu nome");
+			escritor.println(comandos.LOGIN);
 			String msg = leitor.readLine();
-			this.nomeCliente = msg.toLowerCase().replaceAll(",","");
+			this.nomeCliente = msg.toLowerCase().replaceAll(",", "");
+			escritor.println(comandos.LOGIN_ACEITO);
 			escritor.println("ola: " + this.nomeCliente);
+			// this.nomeCliente
 			clientes.put(this.nomeCliente, this);
 
 			while (true) {
 				String mensage = leitor.readLine();
-				if (mensage.equalsIgnoreCase("::SAIR")) {
+				if (mensage.equalsIgnoreCase(comandos.SAIR)) {
 					this.cliente.close();
-				} else if (mensage.toLowerCase().startsWith("::mensage")) {
-					
-					String nomeDestinatario = mensage.substring(9, mensage.length());
+				} else if (mensage.toLowerCase().startsWith(comandos.MENSAGEM)) {
+
+					String nomeDestinatario = mensage.substring(comandos.MENSAGEM.length(), mensage.length());
 					System.out.println("Enviado para " + nomeDestinatario);
 					GerenciadorDeClientes destinatario = clientes.get(nomeDestinatario);
-					
+
 					if (destinatario == null) {
 						escritor.println("O cliente informado não existe!");
 					} else {
-						escritor.println("Digite uma mensagem para " + destinatario.getNomeCliente());
+						// escritor.println("Digite uma mensagem para " +
+						// destinatario.getNomeCliente());
 						destinatario.getEscritor().println(this.nomeCliente + " disse " + leitor.readLine());
 					}
-				//lista os nomes dos clientes
-				}else if(mensage.equals("::listar-clientes")) {
+					// lista os nomes dos clientes
+				} else if (mensage.equals(comandos.LISTA_USUARIOS)) {
 					StringBuffer str = new StringBuffer();
-					for(String c: clientes.keySet()) {
+					for (String c : clientes.keySet()) {
 						str.append(c);
 						str.append(",");
 					}
-					str.delete(str.length()-1, str.length());
+					str.delete(str.length() - 1, str.length());
+					escritor.println(comandos.LISTA_USUARIOS);
 					escritor.println(str.toString());
-				}
-				else {
+				} else {
 					escritor.println(this.nomeCliente + ", disse: " + mensage);
 				}
 

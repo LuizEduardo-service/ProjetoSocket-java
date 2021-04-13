@@ -11,8 +11,10 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Scanner;
 
+import javax.swing.DefaultListModel;
 import javax.swing.JFrame;
 import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
@@ -25,6 +27,8 @@ public class ClientSocketSwing extends JFrame {
 	private JTextArea taEditor = new JTextArea("Digite aqui a sua Mensagem!");
 	private JTextArea taVisor = new JTextArea();
 	private JList liUsuarios = new JList();
+	private PrintWriter escritor;
+	private BufferedReader leitor;
 
 	public ClientSocketSwing() {
 		setTitle("Chat com sockets");
@@ -34,29 +38,35 @@ public class ClientSocketSwing extends JFrame {
 		taEditor.setBackground(Color.CYAN);
 
 		taEditor.setPreferredSize(new Dimension(300, 40));
-		//taVisor.setPreferredSize(new Dimension(350, 100));
+		// taVisor.setPreferredSize(new Dimension(350, 100));
 		taVisor.setEditable(false);
-		liUsuarios.setPreferredSize(new Dimension(50, 140));
+		liUsuarios.setPreferredSize(new Dimension(80, 140));
 
 		add(taEditor, BorderLayout.SOUTH);
 		add(new JScrollPane(taVisor), BorderLayout.CENTER);
-		add(liUsuarios, BorderLayout.WEST);
+		add(new JScrollPane(liUsuarios), BorderLayout.WEST);
 
 		pack();
 		setVisible(true);
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 
-		tratarEventos();
-		String[] usuarios=new String[] {"elvis","maria"};
-		preencherListaUsuarios();
+		iniciarEscritor();
+		String[] usuarios = new String[] { "elvis", "maria" };
+		preencherListaUsuarios(usuarios);
 	}
 
-	private void preencherListaUsuarios() {
-		// TODO Auto-generated method stub
-		
+	// PREENCHE A LISTA DE CLIENTES
+	private void preencherListaUsuarios(String[] usuarios) {
+		DefaultListModel modelo = new DefaultListModel();
+		liUsuarios.setModel(modelo);
+		for (String usuario : usuarios) {
+			modelo.addElement(usuario);
+		}
+
 	}
 
-	private void tratarEventos() {
+	// INICIA ESCRITOR
+	private void iniciarEscritor() {
 		taEditor.addKeyListener(new KeyListener() {
 
 			@Override
@@ -68,11 +78,32 @@ public class ClientSocketSwing extends JFrame {
 			@Override
 			public void keyReleased(KeyEvent e) {
 				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-					// inserindo msg na tela
-					taVisor.append(taEditor.getText());
 
-					// limpando o editor
-					taEditor.setText("");
+					// escrevendo para o servidor
+					if (taVisor.getText().isEmpty()) {
+						return;
+					}
+
+					Object usuario = liUsuarios.getSelectedValue();
+
+					if (usuario != null) {
+						// inserindo msg na tela
+						taVisor.append(taEditor.getText());
+
+						escritor.println(comandos.MENSAGEM + usuario);
+						escritor.println(taVisor.getText());
+
+						// limpando o editor
+						taEditor.setText("");
+
+					} else {
+						if (taVisor.getText().equalsIgnoreCase(comandos.SAIR)) {
+							System.exit(0);
+						}
+						JOptionPane.showMessageDialog(ClientSocketSwing.this, "Selecione um usuario");
+						return;
+					}
+
 				}
 
 			}
@@ -86,53 +117,12 @@ public class ClientSocketSwing extends JFrame {
 
 	}
 
-	public static void main(String[] args) {
-		new ClientSocketSwing();
-	}
-
-	public static void main2(String[] args) {
+	public void iniciarChat() {
 
 		try {
 			final Socket cliente = new Socket("127.0.0.1", 9999);
-
-			// lendo para o servidor
-			new Thread() {
-				@Override
-				public void run() {
-					try {
-						BufferedReader leitor = new BufferedReader(new InputStreamReader(cliente.getInputStream()));
-
-						while (true) {
-							String msg = leitor.readLine();
-
-							if (msg == null || msg.length() == 0) {
-								continue;
-							}
-							System.out.println("Mensagem do servidor: " + msg);
-						}
-					} catch (IOException e) {
-						System.out.println("Impossivel ler msg do servidor");
-						e.printStackTrace();
-					}
-				}
-
-			}.start();
-
-			// escrevendo para o servidor
-			PrintWriter escritor = new PrintWriter(cliente.getOutputStream(), true);
-			BufferedReader leitorTerm = new BufferedReader(new InputStreamReader(System.in));
-			String mensagemTerminal = "";
-			while (true) {
-				mensagemTerminal = leitorTerm.readLine();
-				if (mensagemTerminal == null || mensagemTerminal.length() == 0) {
-					continue;
-				}
-
-				escritor.println(mensagemTerminal);
-				if (mensagemTerminal.equalsIgnoreCase("::SAIR")) {
-					System.exit(0);
-				}
-			}
+			escritor = new PrintWriter(cliente.getOutputStream(), true);
+			leitor = new BufferedReader(new InputStreamReader(cliente.getInputStream()));
 
 		} catch (UnknownHostException e) {
 			System.err.println("Endereço passado é invalido!!");
@@ -143,6 +133,56 @@ public class ClientSocketSwing extends JFrame {
 
 		}
 
+	}
+
+	public static void main(String[] args) {
+		final ClientSocketSwing cliente = new ClientSocketSwing();
+		cliente.iniciarChat();
+		cliente.iniciarEscritor();
+		
+		cliente.atualizarListaUsuario();
+		cliente.iniciarLeitor();
+
+	}
+
+	private void atualizarListaUsuario() {
+		escritor.println(comandos.LISTA_USUARIOS);
+
+	}
+
+	private void iniciarLeitor() {
+		try {
+			while (true) {
+				String mensagem;
+				mensagem = leitor.readLine();
+				if (mensagem == null || mensagem.isEmpty())
+					continue;
+
+				// valida se oque foi escrito é um comando / recebe o texto
+				if (mensagem.equals(comandos.LISTA_USUARIOS)) {
+					String[] usuarios =leitor.readLine().split(",");
+					preencherListaUsuarios(usuarios);
+				} else if (mensagem.equals(comandos.LOGIN)) {
+					String login = JOptionPane.showInputDialog("Qual o seu Login? ");
+					escritor.println(login);
+					
+				}else if(mensagem.equals(comandos.LOGIN_ACEITO)){
+					atualizarListaUsuario();	
+				}
+				else {
+					taVisor.append(mensagem);
+					taVisor.append("\n");
+				}
+			}
+		} catch (IOException e) {
+			System.out.println("Impossivel ler a mensagem do servidor!");
+			e.printStackTrace();
+		}
+
+	}
+
+	private DefaultListModel getListaUsuarios() {
+		return (DefaultListModel) liUsuarios.getModel();
 	}
 
 }
