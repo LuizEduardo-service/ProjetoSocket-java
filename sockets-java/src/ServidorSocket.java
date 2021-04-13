@@ -26,7 +26,7 @@ public class ServidorSocket {
 
 			System.err.println("PORTA FECHADA!");
 		}
-
+//teste
 	}
 
 }
