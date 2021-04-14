@@ -111,7 +111,7 @@ public class JogoDaVelha extends JFrame {
 		public Bloco() {
 			setBackground(Color.WHITE);
 			addActionListener(e -> {
-				JOptionPane.showMessageDialog(rootPane,"ok");
+				//JOptionPane.showMessageDialog(rootPane,"ok");
 				if (quem == 0) {
 					if (jogadorVez == JOGADOR_1) {
 
