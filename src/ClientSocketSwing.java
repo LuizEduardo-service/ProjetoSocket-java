@@ -26,7 +26,7 @@ public class ClientSocketSwing extends JFrame {
 	private static final long serialVersionUID = -4703724726832449262L;
 	private JTextArea taEditor = new JTextArea("Digite aqui a sua Mensagem!");
 	private JTextArea taVisor = new JTextArea();
-	private JList liUsuarios = new JList();
+	private JList<String> liUsuarios = new JList<String>();
 	private PrintWriter escritor;
 	private BufferedReader leitor;
 
@@ -57,7 +57,7 @@ public class ClientSocketSwing extends JFrame {
 
 	// PREENCHE A LISTA DE CLIENTES
 	private void preencherListaUsuarios(String[] usuarios) {
-		DefaultListModel modelo = new DefaultListModel();
+		DefaultListModel<String> modelo = new DefaultListModel<String>();
 		liUsuarios.setModel(modelo);
 		for (String usuario : usuarios) {
 			modelo.addElement(usuario);
@@ -75,8 +75,9 @@ public class ClientSocketSwing extends JFrame {
 
 			}
 
+//keyReleased
 			@Override
-			public void keyReleased(KeyEvent e) {
+			public void keyPressed(KeyEvent e) {
 				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
 
 					// escrevendo para o servidor
@@ -85,16 +86,18 @@ public class ClientSocketSwing extends JFrame {
 					}
 
 					Object usuario = liUsuarios.getSelectedValue();
-
 					if (usuario != null) {
 						// inserindo msg na tela
+						taVisor.append("Eu: ");
 						taVisor.append(taEditor.getText());
+						taVisor.append("\n");
 
 						escritor.println(comandos.MENSAGEM + usuario);
-						escritor.println(taVisor.getText());
+						escritor.println(taEditor.getText());
 
 						// limpando o editor
 						taEditor.setText("");
+						e.consume();
 
 					} else {
 						if (taVisor.getText().equalsIgnoreCase(comandos.SAIR)) {
@@ -109,7 +112,7 @@ public class ClientSocketSwing extends JFrame {
 			}
 
 			@Override
-			public void keyPressed(KeyEvent e) {
+			public void keyReleased(KeyEvent e) {
 				// TODO Auto-generated method stub
 
 			}
@@ -139,7 +142,6 @@ public class ClientSocketSwing extends JFrame {
 		final ClientSocketSwing cliente = new ClientSocketSwing();
 		cliente.iniciarChat();
 		cliente.iniciarEscritor();
-		
 		cliente.atualizarListaUsuario();
 		cliente.iniciarLeitor();
 
@@ -153,23 +155,21 @@ public class ClientSocketSwing extends JFrame {
 	private void iniciarLeitor() {
 		try {
 			while (true) {
-				String mensagem;
-				mensagem = leitor.readLine();
+
+				String mensagem = leitor.readLine();
 				if (mensagem == null || mensagem.isEmpty())
 					continue;
 
-				// valida se oque foi escrito é um comando / recebe o texto
+				// valida se oque foi escrito é um comando
 				if (mensagem.equals(comandos.LISTA_USUARIOS)) {
-					String[] usuarios =leitor.readLine().split(",");
+					String[] usuarios = leitor.readLine().split(",");
 					preencherListaUsuarios(usuarios);
 				} else if (mensagem.equals(comandos.LOGIN)) {
 					String login = JOptionPane.showInputDialog("Qual o seu Login? ");
 					escritor.println(login);
-					
-				}else if(mensagem.equals(comandos.LOGIN_ACEITO)){
-					atualizarListaUsuario();	
-				}
-				else {
+				} else if (mensagem.equals(comandos.LOGIN_ACEITO)) {
+					atualizarListaUsuario();
+				} else {
 					taVisor.append(mensagem);
 					taVisor.append("\n");
 				}
@@ -181,8 +181,8 @@ public class ClientSocketSwing extends JFrame {
 
 	}
 
-	private DefaultListModel getListaUsuarios() {
-		return (DefaultListModel) liUsuarios.getModel();
+	private DefaultListModel<String> getListaUsuarios() {
+		return (DefaultListModel<String>) liUsuarios.getModel();
 	}
 
 }
