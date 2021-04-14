@@ -1,6 +1,8 @@
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Scrollbar;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.io.BufferedReader;
@@ -26,9 +28,10 @@ public class ClientSocketSwing extends JFrame {
 	private static final long serialVersionUID = -4703724726832449262L;
 	private JTextArea taEditor = new JTextArea("Digite aqui a sua Mensagem!");
 	private JTextArea taVisor = new JTextArea();
-	private JList<String> liUsuarios = new JList<String>();
+	private JList liUsuarios = new JList();
 	private PrintWriter escritor;
 	private BufferedReader leitor;
+	private JScrollPane scrollTaVisor=new JScrollPane(taVisor);
 
 	public ClientSocketSwing() {
 		setTitle("Chat com sockets");
@@ -38,26 +41,25 @@ public class ClientSocketSwing extends JFrame {
 		taEditor.setBackground(Color.CYAN);
 
 		taEditor.setPreferredSize(new Dimension(300, 40));
-		// taVisor.setPreferredSize(new Dimension(350, 100));
 		taVisor.setEditable(false);
 		liUsuarios.setPreferredSize(new Dimension(80, 140));
 
 		add(taEditor, BorderLayout.SOUTH);
-		add(new JScrollPane(taVisor), BorderLayout.CENTER);
+		add(scrollTaVisor, BorderLayout.CENTER);
 		add(new JScrollPane(liUsuarios), BorderLayout.WEST);
 
 		pack();
 		setVisible(true);
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 
-		iniciarEscritor();
+		//iniciarEscritor();
 		String[] usuarios = new String[] { "elvis", "maria" };
 		preencherListaUsuarios(usuarios);
 	}
 
 	// PREENCHE A LISTA DE CLIENTES
 	private void preencherListaUsuarios(String[] usuarios) {
-		DefaultListModel<String> modelo = new DefaultListModel<String>();
+		DefaultListModel modelo = new DefaultListModel();
 		liUsuarios.setModel(modelo);
 		for (String usuario : usuarios) {
 			modelo.addElement(usuario);
@@ -71,11 +73,9 @@ public class ClientSocketSwing extends JFrame {
 
 			@Override
 			public void keyTyped(KeyEvent e) {
-				// TODO Auto-generated method stub
 
 			}
 
-//keyReleased
 			@Override
 			public void keyPressed(KeyEvent e) {
 				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
@@ -139,10 +139,10 @@ public class ClientSocketSwing extends JFrame {
 	}
 
 	public static void main(String[] args) {
-		final ClientSocketSwing cliente = new ClientSocketSwing();
+		ClientSocketSwing cliente = new ClientSocketSwing();
 		cliente.iniciarChat();
 		cliente.iniciarEscritor();
-		cliente.atualizarListaUsuario();
+		//cliente.atualizarListaUsuario();
 		cliente.iniciarLeitor();
 
 	}
@@ -167,11 +167,15 @@ public class ClientSocketSwing extends JFrame {
 				} else if (mensagem.equals(comandos.LOGIN)) {
 					String login = JOptionPane.showInputDialog("Qual o seu Login? ");
 					escritor.println(login);
+				} else if (mensagem.equals(comandos.LOGIN_NEGADO)) {
+					JOptionPane.showMessageDialog(ClientSocketSwing.this, "O login é invalido");
 				} else if (mensagem.equals(comandos.LOGIN_ACEITO)) {
 					atualizarListaUsuario();
 				} else {
 					taVisor.append(mensagem);
 					taVisor.append("\n");
+					taVisor.setCaretPosition(taVisor.getDocument().getLength());
+					
 				}
 			}
 		} catch (IOException e) {
@@ -181,8 +185,8 @@ public class ClientSocketSwing extends JFrame {
 
 	}
 
-	private DefaultListModel<String> getListaUsuarios() {
-		return (DefaultListModel<String>) liUsuarios.getModel();
+	private DefaultListModel getListaUsuarios() {
+		return (DefaultListModel) liUsuarios.getModel();
 	}
 
 }

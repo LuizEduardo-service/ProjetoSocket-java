@@ -25,13 +25,16 @@ public class GerenciadorDeClientes extends Thread {
 		try {
 			leitor = new BufferedReader(new InputStreamReader(cliente.getInputStream()));
 			escritor = new PrintWriter(cliente.getOutputStream(), true);
-			escritor.println(comandos.LOGIN);
-				efetuarLogin();
-				String msg;
+			// escritor.println(comandos.LOGIN);
+			efetuarLogin();
+			String msg;
 
 			while (true) {
-				 msg = leitor.readLine();
+				msg = leitor.readLine();
 				if (msg.equalsIgnoreCase(comandos.SAIR)) {
+					
+
+					
 					this.cliente.close();
 				} else if (msg.startsWith(comandos.MENSAGEM)) {
 					String nomeDestinatario = msg.substring(comandos.MENSAGEM.length(), msg.length());
@@ -54,35 +57,48 @@ public class GerenciadorDeClientes extends Thread {
 			}
 		} catch (IOException e) {
 			System.err.println("Conexão fechada!");
-			e.printStackTrace();
+			clientes.remove(this.nomeCliente);
+
 		}
-	}
-	
-	private void efetuarLogin() throws IOException {
-		String msg = leitor.readLine();
-		this.nomeCliente = msg.toLowerCase().replaceAll(",", "");
-		escritor.println(comandos.LOGIN_ACEITO);
-		escritor.println("ola: " + this.nomeCliente);
-		// this.nomeCliente
-		clientes.put(this.nomeCliente, this);
-		
-		for(String cliente: clientes.keySet()) {
-			atualizarListaUsuarios(clientes.get(cliente));
-		}
-		
 	}
 
-	private void atualizarListaUsuarios(GerenciadorDeClientes gerenciadorDeClientes) {
+	private void efetuarLogin() throws IOException {
+
+		while (true) {
+			escritor.println(comandos.LOGIN);
+			this.nomeCliente = leitor.readLine().toLowerCase().replaceAll(",", "");
+			if(this.nomeCliente.equalsIgnoreCase("null")|| this.nomeCliente.isEmpty()) {
+				
+			}
+			else if (clientes.containsKey(this.nomeCliente)) {
+				escritor.println(comandos.LOGIN_NEGADO);
+			} else {
+				escritor.println(comandos.LOGIN_ACEITO);
+				escritor.println("ola: " + this.nomeCliente);
+				clientes.put(this.nomeCliente, this);
+
+				for (String cliente : clientes.keySet()) {
+					atualizarListaUsuarios(clientes.get(cliente));
+				}
+				break;
+			}
+		}
+	}
+
+	private void atualizarListaUsuarios(GerenciadorDeClientes cliente) {
 		StringBuffer str = new StringBuffer();
 		for (String c : clientes.keySet()) {
+			if(cliente.getNomeCliente().equals(c))
+				continue;
+			
 			str.append(c);
 			str.append(",");
 		}
+		if(str.length()>0)
 		str.delete(str.length() - 1, str.length());
-		gerenciadorDeClientes.getEscritor().println(comandos.LISTA_USUARIOS);
-		gerenciadorDeClientes.getEscritor().println(str.toString());
+		cliente.getEscritor().println(comandos.LISTA_USUARIOS);
+		cliente.getEscritor().println(str.toString());
 
-		
 	}
 
 	public PrintWriter getEscritor() {
