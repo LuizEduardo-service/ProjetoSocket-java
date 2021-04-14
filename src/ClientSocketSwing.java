@@ -31,13 +31,14 @@ public class ClientSocketSwing extends JFrame {
 	private JList liUsuarios = new JList();
 	private PrintWriter escritor;
 	private BufferedReader leitor;
-	private JScrollPane scrollTaVisor=new JScrollPane(taVisor);
+	private JScrollPane scrollTaVisor = new JScrollPane(taVisor);
 
 	public ClientSocketSwing() {
 		setTitle("Chat com sockets");
 		setLocationRelativeTo(null);
 		setLayout(new BorderLayout());
 		liUsuarios.setBackground(Color.BLACK);
+		liUsuarios.setForeground(Color.CYAN);
 		taEditor.setBackground(Color.CYAN);
 
 		taEditor.setPreferredSize(new Dimension(300, 40));
@@ -52,7 +53,7 @@ public class ClientSocketSwing extends JFrame {
 		setVisible(true);
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 
-		//iniciarEscritor();
+		// iniciarEscritor();
 		String[] usuarios = new String[] { "elvis", "maria" };
 		preencherListaUsuarios(usuarios);
 	}
@@ -142,7 +143,7 @@ public class ClientSocketSwing extends JFrame {
 		ClientSocketSwing cliente = new ClientSocketSwing();
 		cliente.iniciarChat();
 		cliente.iniciarEscritor();
-		//cliente.atualizarListaUsuario();
+		// cliente.atualizarListaUsuario();
 		cliente.iniciarLeitor();
 
 	}
@@ -175,7 +176,7 @@ public class ClientSocketSwing extends JFrame {
 					taVisor.append(mensagem);
 					taVisor.append("\n");
 					taVisor.setCaretPosition(taVisor.getDocument().getLength());
-					
+
 				}
 			}
 		} catch (IOException e) {
